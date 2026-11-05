@@ -1,0 +1,47 @@
+{
+  "name": "範例便當店",
+  "groups": [
+    { "name": "餐具", "min": 0, "max": 1, "choices": [{ "label": "不要餐具" }] }
+  ],
+  "categories": [
+    {
+      "name": "便當",
+      "groups": [
+        { "name": "白飯", "min": 1, "max": 1, "choices": [{ "label": "正常" }, { "label": "少飯" }, { "label": "加飯", "delta": 10 }] }
+      ],
+      "items": [
+        { "name": "排骨便當", "variants": [{ "label": "便當", "price": 110 }, { "label": "單點", "price": 70 }] },
+        { "name": "雞腿便當", "price": 120 },
+        {
+          "name": "雙拼便當", "price": 130,
+          "groups": [
+            { "name": "選兩種主菜", "min": 2, "max": 2, "choices": [{ "label": "排骨" }, { "label": "雞腿" }, { "label": "滷肉" }, { "label": "魚排", "delta": 10 }] }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "麵食",
+      "items": [
+        {
+          "name": "牛肉麵", "variants": [{ "label": "小", "price": 140 }, { "label": "大", "price": 170 }],
+          "groups": [
+            { "name": "麵條", "min": 1, "max": 1, "choices": [{ "label": "細麵" }, { "label": "寬麵" }, { "label": "烏龍", "delta": 10 }] }
+          ]
+        },
+        { "name": "餛飩湯", "price": 50 }
+      ]
+    },
+    {
+      "name": "飲料",
+      "groups": [
+        { "name": "甜度", "min": 1, "max": 1, "choices": [{ "label": "正常" }, { "label": "半糖" }, { "label": "無糖" }] },
+        { "name": "冰塊", "min": 1, "max": 1, "choices": [{ "label": "正常冰" }, { "label": "少冰" }, { "label": "去冰" }] }
+      ],
+      "items": [
+        { "name": "紅茶", "variants": [{ "label": "中", "price": 30 }, { "label": "大", "price": 40 }] },
+        { "name": "奶茶", "variants": [{ "label": "中", "price": 45 }, { "label": "大", "price": 55 }] }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{"categories":[
+ {"name":"便當區","items":[
+   {"name":"招牌三寶飯","variants":[{"label":"","price":140}]},
+   {"name":"超狂五寶飯","variants":[{"label":"","price":"$170"}]},
+   {"name":"  ","variants":[{"label":"","price":99}]}]},
+ {"name":"單點區","items":[
+   {"name":"港燒蜜腸","variants":[{"label":"份","price":50},{"label":"條","price":"130"}]},
+   {"name":"烤鴨","variants":[{"label":"全","price":"1,000"},{"label":"半","price":500},{"label":"1/4","price":280}]}]},
+ {"name":"雙拼","items":[
+   {"name":"雙拼便當","variants":[{"label":"","price":150}],
+    "groups":[{"name":"選兩種肉","min":2,"max":2,"choices":[{"label":"烤鴨"},{"label":"油雞"},{"label":"叉燒","delta":10},{"label":"香腸"},{"label":"燒肉"}]}]}]},
+ {"name":"加料區","items":[
+   {"name":"滷蛋","variants":[{"label":"","price":15}]},
+   {"name":"蔬菜","variants":[{"label":"大","price":50},{"label":"小","price":"時價"}],"unsure":true}]},
+ {"name":"空分類","items":[]}
+]}
