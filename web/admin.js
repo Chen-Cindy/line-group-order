@@ -320,15 +320,19 @@ function showSummary(orderId, tab) {
   render_('<div class="loading">載入中…</div>');
   return api('summary', { orderId: orderId }).then(function (s) {
     var o = s.order;
+    var priceOf = {}; // 同一個品項名稱（含份量、選項）單價相同，從明細取
+    s.lines.forEach(function (l) { priceOf[l.label] = l.unitPrice; });
     var storeHtml = '<div class="card"><h3>共 ' + s.store.totalQty + ' 份・' + money_(s.store.totalAmount) + '</h3>' +
-      (s.store.rows.length ? '<table class="grid">' + s.store.rows.map(function (r) {
-        return '<tr><td>' + esc_(r.label) + '</td><td>×' + r.qty + '</td></tr>';
+      (s.store.rows.length ? '<table class="grid">' + headRow_(['名稱', '單價', '數量']) + s.store.rows.map(function (r) {
+        return '<tr><td>' + esc_(r.label) + '</td><td style="' + NUM_TD_ + '">' + money_(priceOf[r.label] || 0) +
+          '</td><td>×' + r.qty + '</td></tr>';
       }).join('') + '</table>' : '<div class="sub">還沒有人點</div>') +
       (s.store.notes.length ? '<h3 class="mt">備註</h3><table class="grid">' + s.store.notes.map(function (n) {
         return '<tr><td>' + esc_(n.text) + '</td><td>×' + n.count + '</td></tr>';
       }).join('') + '</table>' : '') + '</div>';
     var moneyHtml = '<div class="card"><h3>' + s.people.length + ' 人・' + money_(s.store.totalAmount) + '</h3>' +
-      (s.people.length ? s.people.map(function (p) {
+      (s.people.length ? '<div style="display:flex;justify-content:space-between;' + HEAD_CELL_ + '">' +
+        '<span>姓名</span><span>金額</span></div>' + s.people.map(function (p) {
         return '<details class="person"><summary><span>' + esc_(p.userName) + '</span><b>' + money_(p.amount) + '</b></summary>' +
           '<table class="grid">' + p.lines.map(function (l) {
             return '<tr><td>' + esc_(l.label) + ' ×' + l.qty +
@@ -364,8 +368,15 @@ function showSummary(orderId, tab) {
       if (t.dataset.tab) showSummary(orderId, t.dataset.tab);
       else if (t.dataset.edit) showLinesEditor_(s, t.dataset.edit);
       else if (t.id === 'add-person') {
-        var who = document.getElementById('person').value;
-        if (who) showLinesEditor_(s, who); else toast_('請先選人');
+        var picker = document.getElementById('person');
+        var typed = document.getElementById('new-name').value.trim();
+        var who = picker ? picker.value : '';
+        if (typed) {
+          // 打的名字跟名單上的人一樣，就當同一個人
+          var same = s.members.filter(function (m) { return m.name === typed; })[0];
+          if (same) showLinesEditor_(s, same.userId); else showLinesEditor_(s, '', typed);
+        } else if (who) showLinesEditor_(s, who);
+        else toast_('請從名單選人，或輸入名字');
       }
       else if (t.id === 'reshare') showShare_(o);
       else if (t.id === 'soldout') showSoldOut_(o, function () { showSummary(orderId, tab); });
@@ -378,22 +389,35 @@ function showSummary(orderId, tab) {
   }).catch(showError_);
 }
 
-// 「給收錢」底下：幫還沒點的人新增（只列打開過訂餐頁、已記進成員名單的人）
+// 統計表的表頭（灰色小字）；數字欄靠右
+var HEAD_CELL_ = 'color:#6b7280;font-size:13px;font-weight:400;padding:4px 0';
+var NUM_TD_ = 'text-align:right;white-space:nowrap;padding-left:12px';
+function headRow_(names) {
+  return '<tr>' + names.map(function (n, i) {
+    return '<th style="' + HEAD_CELL_ + ';text-align:' + (i ? 'right' : 'left') + (i ? ';padding-left:12px' : '') + '">' +
+      esc_(n) + '</th>';
+  }).join('') + '</tr>';
+}
+
+// 「給收錢」底下：幫還沒點的人新增。可從成員名單選，或直接打名字（沒有 LINE 的同事也能記帳）
 function addPersonHtml_(s) {
   var ordered = {};
   s.people.forEach(function (p) { ordered[p.userId] = true; });
   var others = s.members.filter(function (m) { return !ordered[m.userId]; });
-  if (!others.length) return '';
-  return '<div class="inline-row mt"><select id="person"><option value="">幫還沒點的人新增…</option>' +
-    others.map(function (m) { return '<option value="' + esc_(m.userId) + '">' + esc_(m.name) + '</option>'; }).join('') +
-    '</select><button class="ghost" id="add-person">新增</button></div>';
+  return '<div class="sub mt">幫還沒點的人新增</div>' +
+    (others.length ? '<div class="inline-row"><select id="person"><option value="">從名單選…</option>' +
+      others.map(function (m) { return '<option value="' + esc_(m.userId) + '">' + esc_(m.name) + '</option>'; }).join('') +
+      '</select></div>' : '') +
+    '<div class="inline-row mt"><input id="new-name" maxlength="20" placeholder="' +
+    (others.length ? '或直接輸入名字' : '輸入名字') + '"><button class="ghost" id="add-person">新增</button></div>';
 }
 
 // 行政修改某人的單：不受截止限制；全部刪掉再儲存＝刪除這個人的單
-function showLinesEditor_(summary, userId) {
+// userId 空白＋newName：手動新增的人（後端會記進成員名單，之後可以直接從名單選）
+function showLinesEditor_(summary, userId, newName) {
   var o = summary.order;
   var person = summary.members.filter(function (m) { return m.userId === userId; })[0] ||
-    { name: (summary.people.filter(function (p) { return p.userId === userId; })[0] || {}).userName || '' };
+    { name: newName || (summary.people.filter(function (p) { return p.userId === userId; })[0] || {}).userName || '' };
   person.userName = person.name;
   render_(adminHeader_('修改 ' + person.userName + ' 的點餐', true) + '<main id="editor"></main>');
   renderCartEditor(document.getElementById('editor'), o.menu,
@@ -402,7 +426,8 @@ function showLinesEditor_(summary, userId) {
       title: (person ? person.userName : '') + ' 的點餐',
       saveLabel: function () { return '儲存'; },
       onSave: function (lines) {
-        return api('setLinesFor', { orderId: o.orderId, userId: userId, lines: lines }).then(function () {
+        return api('setLinesFor', { orderId: o.orderId, userId: userId || '', newName: userId ? '' : person.name,
+          lines: lines }).then(function () {
           toast_('已更新');
           showSummary(o.orderId, 'money');
         });
