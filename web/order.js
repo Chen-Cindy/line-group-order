@@ -110,18 +110,18 @@ function renderCartEditor(container, menu, lines, opts) {
     container.innerHTML =
       (hasPaused ? '<div class="notice bad-notice">有東西今日暫停供應，請把標紅的刪掉再送出</div>' : '') +
       (notice ? '<div class="notice">' + esc_(notice) + '</div>' : '') +
-      (opts.readOnly ? '' :
-        '<nav class="tabs">' + menu.categories.map(function (c, i) {
-          return '<button data-cat="' + i + '" class="' + (i === cat ? 'on' : '') + '">' + esc_(c.name) + '</button>';
-        }).join('') + '</nav>' +
-        '<ul class="menu">' + menu.categories[cat].items.map(function (it) {
-          if (so.items.indexOf(it.id) >= 0) {
-            return '<li class="paused"><span>' + esc_(it.name) + '</span><span class="right">今日暫停</span></li>';
-          }
-          return '<li data-item="' + esc_(it.id) + '"><span>' + esc_(it.name) +
-            (it.groups.length ? ' <span class="sub">可選</span>' : '') + '</span>' +
-            '<span class="right">' + priceText_(it) + '<span class="plus">＋</span></span></li>';
-        }).join('') + '</ul>') +
+      // 截止後（唯讀）一樣列出全部品項，只是不能點
+      '<nav class="tabs">' + menu.categories.map(function (c, i) {
+        return '<button data-cat="' + i + '" class="' + (i === cat ? 'on' : '') + '">' + esc_(c.name) + '</button>';
+      }).join('') + '</nav>' +
+      '<ul class="menu">' + menu.categories[cat].items.map(function (it) {
+        if (so.items.indexOf(it.id) >= 0) {
+          return '<li class="paused"><span>' + esc_(it.name) + '</span><span class="right">今日暫停</span></li>';
+        }
+        return '<li' + (opts.readOnly ? '' : ' data-item="' + esc_(it.id) + '"') + '><span>' + esc_(it.name) +
+          (it.groups.length ? ' <span class="sub">可選</span>' : '') + '</span>' +
+          '<span class="right">' + priceText_(it) + (opts.readOnly ? '' : '<span class="plus">＋</span>') + '</span></li>';
+      }).join('') + '</ul>' +
       '<section class="cart"><h3>' + esc_(opts.title || (opts.readOnly ? '點餐內容' : '我的點餐')) + '</h3>' +
       (cart.length ? '<ul>' + items + '</ul><div class="total">合計 ' + money_(total) + '</div>' :
         '<div class="sub">還沒有點東西</div>') + '</section>' +
